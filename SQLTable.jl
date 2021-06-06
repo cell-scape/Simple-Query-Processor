@@ -4,8 +4,8 @@
 
 struct Table
     name::String
-    columns::Dict{Symbol, Int64}
-    rows::Vector{Vector{String}}
+    columns::Dict{Any, Int64}
+    rows::Vector{Vector{Any}}
     
     Table() = new()
     "Construct Initial Table"
@@ -17,10 +17,14 @@ struct Table
         )
     end
     
-    function Table(name, columns, rows)
+    function Table(name, columns::Vector{Symbol}, rows)
         new(name,
             Dict(Symbol(f) => i for (i, f) in enumerate(columns)),
             rows)
+    end
+
+    function Table(name::String, columns::Dict{Symbol, Int64}, rows::Vector{Vector{Any}})
+        new(name, columns, rows)
     end
 end
 
@@ -58,7 +62,8 @@ getRows(tbl::Table) = tbl.rows
 getColumns(tbl::Table) = tbl.columns
 getColumn(tbl::Table, column::Symbol) = [r[tbl.columns[column]] for r in tbl.rows]
 getRowsWhere(tbl, column, value) = filter(r -> r[tbl.columns[column]] == value, getAllRows(tbl))
-
+dictToVector(d) = [[k, v] for (k,v) in d]
+columns_lt(x, y) = x[2] < y[2]
 
 function projection(tbl::Table, tempName::String, columns::Symbol...)
     if length(columns) == 1
@@ -76,6 +81,11 @@ function projection(tbl::Table, tempName::String, columns::Symbol...)
           newheader,
           newrows)
 end
+
+function projectComplement(tbl::Table, tempName::String, column::Symbol)
+    complement = [c for c in keys(tbl.columns) if c != column]
+    projection(tbl, tempName, complement...)
+end
     
     
 function getColumnIter(tbl::Table, column::Symbol)
@@ -86,6 +96,18 @@ function getColumnIter(tbl::Table, column::Symbol)
     return columnvector
 end
 
+function join(tbl1::Table, tbl2::Table, on1::Symbol, on2::Symbol)
+    @assert on1 in keys(tbl1.columns) && on2 in keys(tbl2.columns) 
+    new_rows = Vector{String}[]
+    for r1 in tbl1.rows
+        for r2 in tbl2.rows
+            if r1[tbl1.columns[on1]] == r2[tbl2.columns[on2]]
+                push!(new_rows, vcat(r1, r2))
+            end
+        end
+    end
+    return new_rows
+end
                      
 
 function selection(tbl::Table, tempName::String, column::Symbol, value)
@@ -95,7 +117,30 @@ function selection(tbl::Table, tempName::String, column::Symbol, value)
             push!(matches, row)
         end
     end
-    return matches
+    return Table(tempName, tbl.columns, matches)
 end
+
+
+### Sorting
+
+function sortTableByKey(tbl::Table, tempName::String, key::Symbol; rev=false)
+    function key_lt(x, y)
+        x[tbl.columns[key]] < y[tbl.columns[key]]
+    end
+    Table(tempName, tbl.columns, sort(tbl.rows, lt=key_lt, rev=rev))
+end
+    
+
+function groupBy(tbl, tempName, key)
+    groups = unique(map(x -> x[tbl.columns[key]], tbl.rows))
+    counts = Dict(g => 0 for g in groups)
+    cols = Dict{Symbol, Int64}(key => 1, :count => 2)
+    for row in tbl.rows
+        counts[row[tbl.columns[key]]] += 1
+    end
+    return Table(tempName, cols, [[g, c] for (g, c) in counts])
+end
+
+
 
 # end # module
