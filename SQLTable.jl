@@ -1,6 +1,6 @@
 # module SQLTable
 
-export Table, Database, initDB, getTable, getAllRows, getColumn, getRowsWhere
+# export Table, Database, initDB, getTable, getAllRows, getColumn, getRowsWhere
 
 struct Table
     name::String
@@ -8,6 +8,7 @@ struct Table
     rows::Vector{Vector{String}}
     
     Table() = new()
+    "Construct Initial Table"
     function Table(name, rows)
         new(
             name, 
@@ -17,7 +18,9 @@ struct Table
     end
     
     function Table(name, columns, rows)
-        new(name, columns, rows) 
+        new(name,
+            Dict(Symbol(f) => i for (i, f) in enumerate(columns)),
+            rows)
     end
 end
 
@@ -51,13 +54,15 @@ function initDB(dbname)
 end
 
 getTable(db::Database, tblname::Symbol) = db.tables[tblname]
-getAllRows(tbl::Table) = tbl.rows
-getColumn(tbl::Table, column::Symbol) =  [r[tbl.columns[column]] for r in tbl.rows]
+getRows(tbl::Table) = tbl.rows
+getColumns(tbl::Table) = tbl.columns
+getColumn(tbl::Table, column::Symbol) = [r[tbl.columns[column]] for r in tbl.rows]
 getRowsWhere(tbl, column, value) = filter(r -> r[tbl.columns[column]] == value, getAllRows(tbl))
 
-function getColumns(tbl::Table, columns::Symbol...)
+
+function projection(tbl::Table, tempName::String, columns::Symbol...)
     if length(columns) == 1
-        return getColumn(tbl, columns[1])
+        return Table(tempName, columns, getColumn(tbl, columns[1]))
     end
     newheader = [columns[1]]
     newvalues = getColumn(tbl, columns[1])
@@ -67,9 +72,9 @@ function getColumns(tbl::Table, columns::Symbol...)
     end
     newrows = [newvalues[i, :] for i in 1:size(newvalues)[1]]
     
-    Table("tempName",
-          Dict(h => i for (i, h) in enumerate(newheader)),
-          newvalues)
+    Table(tempName,
+          newheader,
+          newrows)
 end
     
     
@@ -79,9 +84,11 @@ function getColumnIter(tbl::Table, column::Symbol)
         push!(columnvector, r[tbl.columns[column]])
     end
     return columnvector
-end 
+end
 
-function getRowsWhereIter(tbl, column, value)
+                     
+
+function selection(tbl::Table, tempName::String, column::Symbol, value)
     matches = []
     for row in tbl.rows
         if row[tbl.columns[column]] == value
@@ -90,18 +97,5 @@ function getRowsWhereIter(tbl, column, value)
     end
     return matches
 end
-
-function writeTempTable(tbl)
-    
-end
-#=
-function join(tbl1, tbl2, on)
-    joined = []
-    for r1 in tbl1
-        for r2 in tbl2
-            if r1[tbl1.columns[on]] == r2[tbl2.columns[on]]
-
-end
-=#
 
 # end # module

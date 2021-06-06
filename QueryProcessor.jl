@@ -4,5 +4,4 @@ using SQLTable
 using Operators
 
 
-
 end # module
