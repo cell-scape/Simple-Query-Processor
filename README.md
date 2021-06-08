@@ -6,13 +6,4 @@
 
 
 * Lab is written in the Julia programming language
-* [Installation instructions]
-
-* Description
-* [Database layout]
-* [Objects]
-* [Accessor functions]
-
-* Operators
-* [Implementation explainer]
-* [pictures]
+* Parses several operators in relational algebra.
