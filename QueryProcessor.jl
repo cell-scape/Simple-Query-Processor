@@ -304,7 +304,7 @@ function main(query="")
     qa1_result = parseQuery(company, qa1, newColumnName=:counted_ssn);
     displayTable(qa1_result)
 
-    if ispath("./queries/$query") 
+    if isfile("./queries/$query") 
         userQuery = readQuery(query) 
         userResults = parseQuery(company, userQuery)
         println("\nUser Query")
