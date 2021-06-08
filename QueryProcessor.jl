@@ -48,10 +48,10 @@ struct Table
         new(name, columns, rows)
     end
 
-    "Fixed something at some point, may be useless now"
+    "Generic Constructor for Edge Cases"
     function Table(name::Any, columns::Any, rows::Any)
         new(name, columns, rows)
-    end
+    end 
 end
 
 struct Database # just a default constructor
@@ -311,7 +311,6 @@ function main(query="")
         displayTable(userResults)
     end
     println("\nGoodbye!\n")
-    exit(0)
 end
 
 # Execution as script begins here
