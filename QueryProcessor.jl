@@ -1,8 +1,7 @@
 # CIS 611, Summer 2021
 # Bradley Dowling
-# Module MockSQLProcessor is a component for a mock SQL query processor.
 # A directory containing csv files acts as a database.
-# This defines the Table and Database structs, as well as some
+# This program defines the Table and Database structs, as well as some
 # convenience functions, the operators, and the main program.
 
 # This file and all its functions can be used in the 
